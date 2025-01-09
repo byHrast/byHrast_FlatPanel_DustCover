@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ESP32 Web Server</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+	      <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+      <meta http-equiv="Pragma" content="no-cache" />
+      <meta http-equiv="Expires" content="0" />
+    <link rel="stylesheet" type="text/css" href="style.css">
+	<script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript">
+      //// Azuriranje temeprature svakih 2sec
+      setInterval("reloadChat();", 2000);
+
+      function reloadChat() {
+        $('#state').load('LEDstatus.htm');
+        $('#state2').load('COVERstatus.htm');
+		$('#state3').load('HEATERstatus.htm');
+      }
+    </script>
+  </head>
+  <body>
+    <h1>byHrast FlatPanel</h1>
+    <p>LED status: <strong> <span id="state">%STATE%</span></strong>
+    </p>
+    <p>
+      <a href="/?led=1">
+        <button class="button">ON</button>
+      </a>
+
+      <a href="/?led=0">
+        <button class="button button2">OFF</button>
+      </a>
+    </p>
+    <p>COVER status: <strong> <span id="state2">%STATE2%</span></strong>
+    </p>
+    <p>
+      <a href="/?cover=1">
+        <button class="button">OPEN</button>
+      </a>
+      <a href="/?cover=0">
+        <button class="button button2">CLOSE</button>
+      </a>
+    </p>
+	<p>HEATER status: <strong> <span id="state3">%STATE3%</span></strong>
+    </p>
+    <p>
+      <a href="/?heater=1">
+        <button class="button">ON</button>
+      </a>
+      <a href="/?heater=0">
+        <button class="button button2">OFF</button>
+      </a>
+    </p>
+    <form style="clear:both;" id="form1" action="/">
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <label %hidden1% for="fname">SSID</label>
+            </td>
+            <td>
+              <input %hidden1% type="text" id="SSID" name="SSID" value="%SSID%">
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label %hidden1% for="fname">PASSWORD</label>
+            </td>
+            <td>
+              <input %hidden1% type="text" id="PASS" name="PASS" value="%PASS%">
+            </td>
+          </tr>
+          <tr>
+            <td colspan="5" style="text-align:center">
+              <input class="button3" type="submit" value="Pošalji izmjene">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+  </body>
+</html>

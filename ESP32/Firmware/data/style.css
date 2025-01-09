@@ -1,0 +1,72 @@
+html {
+  font-family: Helvetica;
+  display: inline-block;
+  margin: 0px auto;
+  text-align: center;
+}
+h1{
+  color: #0F3376;
+  padding: 2vh;
+}
+p{
+  font-size: 1.5rem;
+}
+.button {
+  display: inline-block;
+  background-color: #008CBA;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  padding: 16px 40px;
+  text-decoration: none;
+  font-size: 30px;
+  margin: 2px;
+  cursor: pointer;
+}
+.button2 {
+  background-color: #f44336;
+}
+a:link.button2, a:visited.button2 {
+background-color: #ddd;
+  color: black;
+  padding: 14px 25px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+    border-radius: 8px;
+}
+a:hover.button2, a:active.button2 {
+background-color: #2ab934;
+    border-radius: 8px;
+	  color: white;
+}
+.button3 {
+  display: inline-block;
+  background-color: #008CBA;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  padding: 16px 40px;
+  text-decoration: none;
+  font-size: 14px;
+  margin: 2px;
+  cursor: pointer;
+}
+table {
+  margin-left: auto;
+  margin-right: auto;
+}
+td {
+	text-align:left;
+}
+input[type=number]{
+    width: 80px;
+} 
+#spitt{
+ width:88px;   
+font-size: 16px;
+ }
+ #msgNo{
+ width:88px;   
+font-size: 16px;
+ }
