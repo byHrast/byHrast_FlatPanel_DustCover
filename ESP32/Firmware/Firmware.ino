@@ -182,8 +182,9 @@ void setup() {
 
       if (p->name() == "led") {
         var1 = p->value();
-        if (var1 == "0") ledON(ledMax);
-        if (var1 == "1") ledON(0);
+        ledON(var1.toInt());
+        ledState = var1;
+
       }
     }
   });
@@ -198,8 +199,8 @@ void setup() {
 
       if (p->name() == "heater") {
         var1 = p->value();
-        if (var1 == "0") ledON(0); /// zamjeniti ovo s fjom gdje pali grijanje
-        if (var1 == "1") ledON(ledMax);/// zamjeniti ovo s fjom gdje gasi grijanje
+        if (var1 == "1") digitalWrite(heaterENA, HIGH);
+        if (var1 == "0") digitalWrite(heaterENA, LOW);
       }
     }
   });
@@ -215,10 +216,10 @@ void setup() {
       if (p->name() == "cover") {
         var1 = p->value();
         if (var1 == "1") {
-          openCover(); //openCover(); /// zamjeniti ovo s fjom gdje otvara cover
+          openCover(); 
         }
         if (var1 == "0") {
-          closeCover(); //closeCover();/// zamjeniti ovo s fjom gdje zatvara cover
+          closeCover();
         }
       }
     }
@@ -332,6 +333,7 @@ void closeCover() {
 
   }
   coverState = "CLOSED";
+  analogWriteFrequency(ledENA, 1000);
   myservo.detach();
 }
 
@@ -347,11 +349,12 @@ void openCover() {
     // digitalWrite(servoENA, HIGH);
   }
   coverState = "OPEN";
+  analogWriteFrequency(ledENA, 1000);
   myservo.detach();
 }
 
 void ledON (int P) {
-  analogWriteFrequency(ledENA, 1000); /// Reset freq change coused by ServoESP32 library
+  /// Reset freq change coused by ServoESP32 library
   analogWrite(ledENA, P);
   if (P == 0) ledState = "OFF";
   else ledState = "ON";
