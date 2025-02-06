@@ -52,6 +52,9 @@ background-color: #2ab934;
   margin: 2px;
   cursor: pointer;
 }
+a {
+	text-decoration: none;
+}
 table {
   margin-left: auto;
   margin-right: auto;
