@@ -1,5 +1,5 @@
 #include "WiFi.h"
-#include "ESPAsyncWebServer.h"
+#include "ESPAsyncWebServer.h" // Use ESP32_Async_Web_Server library  https://github.com/byHrast/byHrast_FlatPanel_DustCover/tree/main/ESP32
 #include "SPIFFS.h"
 #include <ESP32Servo.h>
 ESP32PWM pwm;
@@ -49,51 +49,24 @@ AsyncWebServer server(80);
 
 // Ova fja obrađuje u html-u varijable omeđene s % i generira vrijednosti
 String processor(const String& var) {
-  ////Serial.println(var);
-  if (var == "STATE") {
+  // Return LED state
+  if (var == "STATE") return ledState;
 
-    return ledState;
-  }
+  // Determine cover state based on position
+  if (var == "STATE2") return (pos >= 180) ? "CLOSED" : (pos <= 0) ? "OPEN" : "MOVING";
 
-  if (var == "STATE2") {
-    if (pos >= 180) { // treba zamijeniti s ServoENA
-      coverState = "CLOSED";
-    }
-    else if (pos <= 0) {
-      coverState = "OPEN";
-    }
-    else if (pos > 0 && pos < 180) coverState = "MOVING";
-    return coverState;
-  }
+  // Return heater state based on heaterENA pin state
+  if (var == "STATE3") return digitalRead(heaterENA) ? "ON" : "OFF";
 
-  if (var == "STATE3") {
-    if (digitalRead(heaterENA)) { // treba zamijeniti s HeaterENA
-      heaterState = "ON";
-    }
-    else {
-      heaterState = "OFF";
-    }
-    //Serial.print(heaterState);
-    return heaterState;
-  }
+  // Retrieve Wi-Fi settings from SPIFFS
+  if (var == "SSID") return getValue(spiffsRead("WL"), ';', 0);
+  if (var == "PASS") return getValue(spiffsRead("WL"), ';', 1);
+  if (var == "iP") return getValue(spiffsRead("WL"), ';', 2);
 
-  if (var == "SSID") {
-    String val = getValue(spiffsRead("WL"), ';', 0);
-    return val;
-  }
-
-  if (var == "PASS") {
-    String val = getValue(spiffsRead("WL"), ';', 1);
-    return val;
-  }
-
-  if (var == "iP") {
-    String val = getValue(spiffsRead("WL"), ';', 2);
-    return val;
-  }
-
+  // Default return if no match
   return String();
 }
+
 
 
 void setup() {
@@ -118,152 +91,22 @@ void setup() {
 
   initWiFi();
 
-  // Definiranje html datoteka spremljenih u spiffsima
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-
-    int paramsNr = request->params();
-    bool Write = false;
-    String var1;
-    String var2;
-    String var3;
-    String var4;
-    String var5;
-
-    for (int i = 0; i < paramsNr; i++) {
-
-      const AsyncWebParameter* p = request->getParam(i);
-
-      if (p->name() == "led") {
-        var1 = p->value();
-        if (var1 == "1") ledON(ledMax);
-        if (var1 == "0") ledON(0);
-      }
-      if (p->name() == "heater") {
-        var2 = p->value();
-        if (var2 == "1") digitalWrite(heaterENA, HIGH);
-        if (var2 == "0") digitalWrite(heaterENA, LOW);
-      }
-      if (p->name() == "cover") {
-        var3 = p->value();
-        if (var3 == "1") openCover();
-        if (var3 == "0") closeCover();
-      }
-      if (p->name() == "SSID") {
-        var4 = p->value();
-      }
-      if (p->name() == "PASS") {
-        var5 = p->value();
-        Write = true;
-      }
-    }
-
-    if (Write == true) {
-      spiffsWrite("WL", var4 + ";" + var5);
-      Write = false;
-    }
-  });
-
-  // Route to load style.css file
+  server.on("/", HTTP_GET, handleRootRequest);
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/style.css", "text/css");
   });
   server.on("/jquery.min.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/jquery.min.js", "text/css");
   });
-  server.on("/LEDstatus.htm", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/LEDstatus.htm", String(), false, processor);
-    int paramsNr = request->params();
-    String var1;
+  server.on("/LEDstatus.htm", HTTP_GET, handleLEDStatus);
+  server.on("/HEATERstatus.htm", HTTP_GET, handleHeaterStatus);
+  server.on("/COVERstatus.htm", HTTP_GET, handleCoverStatus);
 
-    for (int i = 0; i < paramsNr; i++) {
-
-      const AsyncWebParameter* p = request->getParam(i);
-
-      if (p->name() == "led") {
-        var1 = p->value();
-        ledON(var1.toInt());
-        ledState = var1;
-
-      }
-    }
-  });
-  server.on("/HEATERstatus.htm", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/HEATERstatus.htm", String(), false, processor);
-
-    int paramsNr = request->params();
-    String var1;
-
-    for (int i = 0; i < paramsNr; i++) {
-      const AsyncWebParameter* p = request->getParam(i);
-
-      if (p->name() == "heater") {
-        var1 = p->value();
-        if (var1 == "1") digitalWrite(heaterENA, HIGH);
-        if (var1 == "0") digitalWrite(heaterENA, LOW);
-      }
-    }
-  });
-  server.on("/COVERstatus.htm", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/COVERstatus.htm", String(), false, processor);
-
-    int paramsNr = request->params();
-    String var1;
-
-    for (int i = 0; i < paramsNr; i++) {
-      const AsyncWebParameter* p = request->getParam(i);
-
-      if (p->name() == "cover") {
-        var1 = p->value();
-        if (var1 == "1") {
-          openCover(); 
-        }
-        if (var1 == "0") {
-          closeCover();
-        }
-      }
-    }
-  });
-  // Start server
   server.begin();
 }
 
 void loop() {
-  //thermistorValue1 = analogRead(thermistorPin1);
-  //Serial.println(thermistorValue1);
-  //delay(500);
-
-  // thermistorValue2 = analogRead(thermistorPin2);
-  // Serial.println(thermistorValue2);
-  //  delay(500);
-
-
-  String cmd;
-  // Serijska komunikacija
-  if (Serial.available() > 0) {
-    // read the incoming byte:
-    cmd = Serial.readStringUntil('#');
-    if (cmd == "heaterON") {
-      digitalWrite(heaterENA, HIGH);
-    }
-    if (cmd == "heaterOFF") {
-      digitalWrite(heaterENA, LOW);
-    }
-    if (cmd == "50") {
-      //analogWrite(ledENA, 127);
-    }
-    if (cmd == "100") {
-      // analogWrite(ledENA, 256);
-    }
-
-    if (cmd == "close") {
-      closeCover();
-    }
-
-    if (cmd == "open") {
-      openCover();
-    }
-  }
+  processSerialCommand();
 }
 
 String getValue(String data, char separator, int index) ///////// fja koja  dijeli veliki string na segmente stringova odvojene separatorom, npr., zerez ili točka zarez
@@ -361,36 +204,117 @@ void ledON (int P) {
 }
 
 void initWiFi() {
-  // Ako se u 5 navrata ne uspije spojiti na WiFi, onda generira svoj AP gdje se mogu spojiti na web server
-  int i = 0;
+  Serial.println("Initializing WiFi...");
+
   String val = spiffsRead("WL");
-  Serial.println("SSID: " + getValue(val, ';', 0) + "  PASS:" + getValue(val, ';', 1));
+  String ssid = getValue(val, ';', 0);
+  String pass = getValue(val, ';', 1);
+
+  Serial.println("SSID: " + ssid + "  PASS: " + pass);
 
   WiFi.setHostname(hostname);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid.c_str(), pass.c_str());
 
-  WiFi.begin(string2char(getValue(val, ';', 0)), string2char(getValue(val, ';', 1)));
-  while (WiFi.status() != WL_CONNECTED && i <= 5) {
-    i++;
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 10) {
     delay(1000);
-    Serial.println("Connecting to WiFi..");  // Print ESP32 Local IP Address
+    Serial.print(".");
+    attempts++;
   }
 
-  Serial.println(WiFi.localIP());
-  if (i > 5) {
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nConnected to WiFi!");
+    Serial.println("IP Address: " + WiFi.localIP().toString());
+  } else {
+    Serial.println("\nWiFi connection failed. Starting AP mode...");
 
     if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
       Serial.println("STA Failed to configure");
     }
 
-    // Connect to Wi-Fi network with SSID and password
-    Serial.print("Setting AP (Access Point)…");
-    // Remove the password parameter, if you want the AP (Access Point) to be open
-
     WiFi.mode(WIFI_AP);
-    WiFi.softAP(ssid, password);
+    WiFi.softAP(ssid.c_str(), pass.c_str());
 
-    IPAddress IP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
-    Serial.println(IP);
+    Serial.println(WiFi.softAPIP());
+  }
+}
+
+void processSerialCommand() {
+  if (!Serial.available()) return; // Exit if no data available
+
+  String cmd = Serial.readStringUntil('#');
+  cmd.trim(); // Remove any leading/trailing whitespace
+
+  if (cmd == "heaterON") {
+    digitalWrite(heaterENA, HIGH);
+  } else if (cmd == "heaterOFF") {
+    digitalWrite(heaterENA, LOW);
+  } else if (cmd == "50") {
+    // analogWrite(ledENA, 127);
+  } else if (cmd == "100") {
+    // analogWrite(ledENA, 256);
+  } else if (cmd == "close") {
+    closeCover();
+  } else if (cmd == "open") {
+    openCover();
+  }
+}
+
+void handleRootRequest(AsyncWebServerRequest *request) {
+  request->send(SPIFFS, "/index.html", String(), false, processor);
+
+  int paramsNr = request->params();
+  String ssid, pass;
+  bool writeToSPIFFS = false;
+
+  for (int i = 0; i < paramsNr; i++) {
+    const AsyncWebParameter* p = request->getParam(i);
+    String name = p->name();
+    String value = p->value();
+
+    if (name == "led") {
+      ledON(value.toInt() ? ledMax : 0);
+    } else if (name == "heater") {
+      digitalWrite(heaterENA, value.toInt() ? HIGH : LOW);
+    } else if (name == "cover") {
+      value.toInt() ? openCover() : closeCover();
+    } else if (name == "SSID") {
+      ssid = value;
+    } else if (name == "PASS") {
+      pass = value;
+      writeToSPIFFS = true;
+    }
+  }
+
+  if (writeToSPIFFS) {
+    spiffsWrite("WL", ssid + ";" + pass);
+  }
+}
+
+void handleLEDStatus(AsyncWebServerRequest *request) {
+  request->send(SPIFFS, "/LEDstatus.htm", String(), false, processor);
+
+  if (request->hasParam("led")) {
+    String value = request->getParam("led")->value();
+    ledON(value.toInt());
+    ledState = value;
+  }
+}
+
+void handleHeaterStatus(AsyncWebServerRequest *request) {
+  request->send(SPIFFS, "/HEATERstatus.htm", String(), false, processor);
+
+  if (request->hasParam("heater")) {
+    digitalWrite(heaterENA, request->getParam("heater")->value().toInt() ? HIGH : LOW);
+  }
+}
+
+void handleCoverStatus(AsyncWebServerRequest *request) {
+  request->send(SPIFFS, "/COVERstatus.htm", String(), false, processor);
+
+  if (request->hasParam("cover")) {
+    request->getParam("cover")->value().toInt() ? openCover() : closeCover();
   }
 }
