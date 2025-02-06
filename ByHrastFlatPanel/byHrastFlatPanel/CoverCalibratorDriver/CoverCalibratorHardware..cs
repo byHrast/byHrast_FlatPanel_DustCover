@@ -55,7 +55,7 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
         private static List<Guid> uniqueIds = new List<Guid>(); // List of driver instance unique IDs
 
         internal static int stat = 0;
-        private const int MAX_BRIGHTNESS = 1;
+        private const int MAX_BRIGHTNESS = 255;
         private static int BRIGHTNESS = 1;
 
         /// <summary>
@@ -589,8 +589,11 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
                         using (var reader = new StreamReader(stream))
                         {
                             responseString = reader.ReadToEnd();
+                            if (responseString == "CLOSED") stat = 2;
+                            if (responseString == "OPEN") stat = 1;
+                            else stat = 0;
 
-                            //MessageBox.Show(responseString);
+                           //MessageBox.Show(url + "   " + responseString);
                         }
                     }
                 }
@@ -599,32 +602,6 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
             {
                 MessageBox.Show(ex.Message);
             }
-            try
-            {
-                var request = (HttpWebRequest)WebRequest.Create(url);
-
-                request.Method = "GET";
-
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                {
-                    string responseString;
-                    using (var stream = response.GetResponseStream())
-                    {
-                        using (var reader = new StreamReader(stream))
-                        {
-                            responseString = reader.ReadToEnd();
-
-                            //MessageBox.Show(responseString);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-
-            stat = 1;
 
         }
 
@@ -652,8 +629,11 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
                         using (var reader = new StreamReader(stream))
                         {
                             responseString = reader.ReadToEnd();
+                            if (responseString == "CLOSED") stat = 2;
+                            if (responseString == "OPEN") stat = 1;
+                            else stat = 0;
 
-                            //MessageBox.Show(responseString);
+                            //MessageBox.Show(url + "   " +responseString);
                         }
                     }
                 }
@@ -661,33 +641,7 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-            }
-            try
-            {
-                var request = (HttpWebRequest)WebRequest.Create(url);
-
-                request.Method = "GET";
-
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                {
-                    string responseString;
-                    using (var stream = response.GetResponseStream())
-                    {
-                        using (var reader = new StreamReader(stream))
-                        {
-                            responseString = reader.ReadToEnd();
-
-                            //MessageBox.Show(responseString);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-
-            stat = 2;
+            }            
         }
 
         /// <summary>
@@ -772,9 +726,7 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
             }
 
             string url = "http://" + comPort + "/LEDstatus.htm?led=" + Brightness;
-            string url2 = "http://" + comPort + "/LEDstatus.htm";
-            //MessageBox.Show(url);
-
+            
             try
             {
                 var request = (HttpWebRequest)WebRequest.Create(url);
@@ -791,6 +743,9 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
                             responseString = reader.ReadToEnd();
 
                             //MessageBox.Show(responseString);
+
+                            BRIGHTNESS = Int32.Parse(responseString);                            
+
                         }
                     }
                 }
@@ -800,34 +755,6 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
                 MessageBox.Show(ex.Message);
             }
 
-            try /// second try to get refreshed calibrator status
-            {
-                var request = (HttpWebRequest)WebRequest.Create(url2);
-
-                request.Method = "GET";
-
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                {
-                    string responseString;
-                    using (var stream = response.GetResponseStream())
-                    {
-                        using (var reader = new StreamReader(stream))
-                        {
-                            responseString = reader.ReadToEnd();
-
-                            //MessageBox.Show(responseString);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-
-
-            BRIGHTNESS = Brightness;
-            //Tu šaljem komandu prema Panelu da je on
         }
 
         /// <summary>
@@ -845,8 +772,6 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
             ///            
 
             string url = "http://" + comPort + "/LEDstatus.htm?led=0"; 
-            string url2 = "http://" + comPort + "/LEDstatus.htm";
-            //MessageBox.Show(url);
 
             try
             {
@@ -872,30 +797,6 @@ namespace ASCOM.byHrastFlatPanel.CoverCalibrator
                 MessageBox.Show(ex.Message);
             }
             
-            try /// second try to get refreshed calibrator status
-            {
-                var request = (HttpWebRequest)WebRequest.Create(url2);
-                request.Method = "GET";
-
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                {
-                    string responseString;
-                    using (var stream = response.GetResponseStream())
-                    {
-                        using (var reader = new StreamReader(stream))
-                        {
-                            responseString = reader.ReadToEnd();
-
-                            //MessageBox.Show(responseString);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-
             BRIGHTNESS = 0;
 
 
