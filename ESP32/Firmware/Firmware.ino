@@ -1,17 +1,15 @@
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h" // Use ESP32_Async_Web_Server library  https://github.com/byHrast/byHrast_FlatPanel_DustCover/tree/main/ESP32
 #include "SPIFFS.h"
-#include <ESP32Servo.h>
+#include "ESP32Servo.h"
+#include "ESPmDNS.h"
 ESP32PWM pwm;
 
 // Defaultne WiFi postavke
 const char* ssid     = "FlatPanel";
 const char* password = "123456789";
-// Set your Static IP address
 IPAddress local_IP(192, 168, 1, 112);
-// Set your Gateway IP address
 IPAddress gateway(192, 168, 1, 1);
-
 IPAddress subnet(255, 255, 255, 0);
 IPAddress primaryDNS(8, 8, 8, 8);   //optional
 IPAddress secondaryDNS(8, 8, 4, 4); //optional
@@ -61,7 +59,8 @@ String processor(const String& var) {
   // Retrieve Wi-Fi settings from SPIFFS
   if (var == "SSID") return getValue(spiffsRead("WL"), ';', 0);
   if (var == "PASS") return getValue(spiffsRead("WL"), ';', 1);
-  if (var == "iP") return getValue(spiffsRead("WL"), ';', 2);
+  //if (var == "iP") return getValue(spiffsRead("WL"), ';', 2);
+  if (var == "iP") return WiFi.localIP().toString();
 
   // Default return if no match
   return String();
@@ -181,7 +180,7 @@ void closeCover() {
 }
 
 void openCover() {
-  myservo.attach(servoPin, 500, 2400);
+  myservo.attach(servoPin, 400, 2500);
   // digitalWrite(servoENA, LOW);
   if (coverState != "OPEN") {
     for (pos = 180; pos >= 0; pos--) {  // goes from 180 degrees to 0 degrees
@@ -239,6 +238,13 @@ void initWiFi() {
     Serial.print("AP IP address: ");
     Serial.println(WiFi.softAPIP());
   }
+
+    if (!MDNS.begin("FlatPanel")) {
+        Serial.println("Error setting up MDNS!");
+        return;
+    }
+    Serial.println("mDNS responder started");
+  
 }
 
 void processSerialCommand() {
